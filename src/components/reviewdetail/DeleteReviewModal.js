@@ -1,12 +1,45 @@
 import React, { useState, useRef } from "react";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { BodyBoldMd, BodyMediumXs } from "../../styles/font";
+import { instance } from "../../api/instance";
 
 const DeleteReviewModal = ({ closeModal }) => {
+  const { reviewid } = useParams();
+  const [isPendingRequest, setIsPendingRequest] = useState(false);
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const inputRefs = useRef([]);
+
+  const handleDeleteReview = async () => {
+    if (isPendingRequest) return;
+
+    const headers = {
+      Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+    };
+
+    try {
+      setIsPendingRequest(true);
+      const res = await instance.post(
+        `/critique/review${reviewid}/password/`,
+        { password },
+        { headers }
+      );
+
+      if (res.status === 200 && res.data.password === true) {
+        await instance.delete(`/critique/review/${reviewid}/`, { headers });
+        navigate(`/`);
+      } else {
+        setErrorMessage("비밀번호가 틀렸습니다");
+      }
+    } catch (error) {
+      console.error("Error checking password:", error);
+      setErrorMessage("서버 오류가 발생했습니다.");
+    } finally {
+      setIsPendingRequest(false);
+    }
+  };
 
   const handleCloseModal = () => {
     closeModal();
@@ -48,7 +81,12 @@ const DeleteReviewModal = ({ closeModal }) => {
             ))}
           </PasswordContainer>
           <ButtonContainer>
-            <CancelButton onClick={handleCloseModal}>취소</CancelButton>
+            <CancelButton
+              onClick={handleCloseModal}
+              disabled={isPendingRequest}
+            >
+              취소
+            </CancelButton>
             <ConfirmButton>삭제하기</ConfirmButton>
           </ButtonContainer>
         </ModalContent>

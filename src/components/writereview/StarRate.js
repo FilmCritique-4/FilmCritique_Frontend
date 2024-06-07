@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Rating } from "react-simple-star-rating";
 
-const StarRate = () => {
+const StarRate = ({ onChange, value }) => {
   const [, setRating] = useState(0);
 
   const handleRating = (rate) => setRating(rate);
@@ -16,6 +16,7 @@ const StarRate = () => {
           transition
           allowFraction
           fillColor="#202020"
+          initialValue={value}
         />
       </div>
     </div>
